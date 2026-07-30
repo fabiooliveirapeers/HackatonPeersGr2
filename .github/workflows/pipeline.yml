@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - '**'
+  workflow_dispatch:
 
 env:
   DEPLOY_TOKEN: "sk_live_fake_2f9a8b7c6d5e4f3a2b1c"
