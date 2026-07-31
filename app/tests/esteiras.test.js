@@ -2,6 +2,10 @@ const request = require('supertest');
 const app = require('../server');
 
 describe('LogiTrack API', () => {
+  beforeEach(async () => {
+    await request(app).post('/demo/rollback');
+  });
+
   test('GET /health retorna status ok', async () => {
     const res = await request(app).get('/health');
     expect(res.statusCode).toBe(200);
@@ -50,5 +54,21 @@ describe('LogiTrack API', () => {
     const res = await request(app).post('/demo/failure');
     expect(res.statusCode).toBe(500);
     expect(res.body.error).toBe('Falha simulada de deploy');
+  });
+
+  test('POST /demo/rollback restaura o estado da simulação', async () => {
+    await request(app).post('/demo/failure');
+
+    const failureRes = await request(app).get('/demo/failure');
+    expect(failureRes.statusCode).toBe(200);
+    expect(failureRes.body.active).toBe(true);
+
+    const rollbackRes = await request(app).post('/demo/rollback');
+    expect(rollbackRes.statusCode).toBe(200);
+    expect(rollbackRes.body.status).toBe('ok');
+
+    const restoredRes = await request(app).get('/demo/failure');
+    expect(restoredRes.statusCode).toBe(200);
+    expect(restoredRes.body.active).toBe(false);
   });
 });
