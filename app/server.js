@@ -9,7 +9,16 @@ const esteiras = [
   { id: 3, setor: 'Expedição', velocidade: 1.5, status: 'manutenção' },
 ];
 
+let demoFailureActive = false;
+
 app.get('/health', (req, res) => {
+  if (demoFailureActive) {
+    return res.status(503).json({
+      status: 'degraded',
+      error: 'Falha simulada de deploy',
+    });
+  }
+
   res.status(200).json({ status: 'ok' });
 });
 
@@ -38,9 +47,37 @@ app.get('/tests', (req, res) => {
     'GET /esteiras',
     'GET /esteiras/:id',
     'GET /tests',
+    'GET /demo/failure',
+    'POST /demo/failure',
+    'POST /demo/rollback',
   ];
 
   res.status(200).json(testes);
+});
+
+app.get('/demo/failure', (req, res) => {
+  res.status(200).json({
+    active: demoFailureActive,
+    message: demoFailureActive ? 'Falha simulada ativa' : 'Sem falha simulada',
+  });
+});
+
+app.post('/demo/failure', (req, res) => {
+  demoFailureActive = true;
+
+  res.status(500).json({
+    error: 'Falha simulada de deploy',
+    rollback: 'Use o workflow de rollback para restaurar a versão anterior.',
+  });
+});
+
+app.post('/demo/rollback', (req, res) => {
+  demoFailureActive = false;
+
+  res.status(200).json({
+    status: 'ok',
+    message: 'Rollback simulado concluído',
+  });
 });
 
 const PORT = process.env.PORT || 3000;

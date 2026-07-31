@@ -38,4 +38,16 @@ describe('LogiTrack API', () => {
     expect(Array.isArray(res.body)).toBe(true);
     expect(res.body).toEqual(expect.arrayContaining([expect.stringContaining('GET /health')]));
   });
+
+  test('GET /demo/failure retorna o estado da simulação', async () => {
+    const res = await request(app).get('/demo/failure');
+    expect(res.statusCode).toBe(200);
+    expect(res.body.active).toBe(false);
+  });
+
+  test('POST /demo/failure simula uma falha de deploy', async () => {
+    const res = await request(app).post('/demo/failure');
+    expect(res.statusCode).toBe(500);
+    expect(res.body.error).toBe('Falha simulada de deploy');
+  });
 });
