@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "jest"
+    "test": "jest",
+    "demo:rollback": "node ../scripts/demo-rollback.js"
   },
   "dependencies": {
     "express": "^4.19.2"
