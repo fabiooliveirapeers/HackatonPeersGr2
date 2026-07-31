@@ -1,16 +1,38 @@
 name: LogiTrack Pipeline
 
 on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - '.github/workflows/pipeline.yml'
+      - 'app/Dockerfile'
+      - 'scripts/**'
   push:
     branches:
-      - '**'
+      - main
+    paths:
+      - 'app/**'
+      - '.github/workflows/pipeline.yml'
+      - 'app/Dockerfile'
+      - 'scripts/**'
   workflow_dispatch:
 
+concurrency:
+  group: logitrack-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
 env:
-  DEPLOY_TOKEN: "sk_live_fake_2f9a8b7c6d5e4f3a2b1c"
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -21,21 +43,59 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
 
       - name: Instalar dependências
-        run: npm install
+        run: npm ci
 
       - name: Rodar testes
-        run: echo "Tests skipped for now"
+        run: npm test
 
-      - name: Build da imagem Docker
-        run: echo "Building docker image..."
-
-  deploy:
-    needs: build
+  build-and-publish:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy para produção
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build da imagem Docker
         run: |
-          echo "Deploying straight to production with token $DEPLOY_TOKEN"
-          echo "Deploy concluído!"
+          docker build -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ./app
+          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Publicar imagem
+        run: |
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Resumo do deploy
+        run: |
+          echo "Image published: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+  deploy:
+    needs: build-and-publish
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy para produção com validação
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+        run: |
+          echo "::add-mask::$DEPLOY_TOKEN"
+          chmod +x ./scripts/deploy.sh
+          ./scripts/deploy.sh "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+      - name: Smoke test do deploy
+        run: |
+          chmod +x ./app/scripts/smoke-test.sh
+          ./app/scripts/smoke-test.sh "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"

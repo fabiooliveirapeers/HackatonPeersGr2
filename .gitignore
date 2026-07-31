@@ -1,3 +1,11 @@
 node_modules/
 .DS_Store
 npm-debug.log*
+.vs/devops-hackaton/CopilotIndices/17.14.1204.46620/CodeChunks.db
+.gitignore
+.vs/devops-hackaton/CopilotIndices/17.14.1204.46620/CodeChunks.db-wal
+.gitignore
+.vs/devops-hackaton/CopilotIndices/17.14.1204.46620/SemanticSymbols.db
+.gitignore
+.vs/devops-hackaton/v17/.wsuo
+.vs/

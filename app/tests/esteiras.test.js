@@ -19,4 +19,16 @@ describe('LogiTrack API', () => {
     const res = await request(app).get('/esteiras/999');
     expect(res.statusCode).toBe(404);
   });
+
+  test('GET /esteiras aceita filtro por status', async () => {
+    const res = await request(app).get('/esteiras?status=operando');
+    expect(res.statusCode).toBe(200);
+    expect(res.body.every((esteira) => esteira.status === 'operando')).toBe(true);
+  });
+
+  test('GET /esteiras aceita filtro por setor', async () => {
+    const res = await request(app).get('/esteiras?setor=Recebimento');
+    expect(res.statusCode).toBe(200);
+    expect(res.body.every((esteira) => esteira.setor === 'Recebimento')).toBe(true);
+  });
 });

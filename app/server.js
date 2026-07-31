@@ -14,7 +14,14 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/esteiras', (req, res) => {
-  res.status(200).json(esteiras);
+  const { status, setor } = req.query;
+  const filtradas = esteiras.filter((esteira) => {
+    const matchStatus = !status || esteira.status === status;
+    const matchSetor = !setor || esteira.setor === setor;
+    return matchStatus && matchSetor;
+  });
+
+  res.status(200).json(filtradas);
 });
 
 app.get('/esteiras/:id', (req, res) => {
