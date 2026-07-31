@@ -31,4 +31,11 @@ describe('LogiTrack API', () => {
     expect(res.statusCode).toBe(200);
     expect(res.body.every((esteira) => esteira.setor === 'Recebimento')).toBe(true);
   });
+
+  test('GET /tests retorna a lista de testes disponíveis', async () => {
+    const res = await request(app).get('/tests');
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body).toEqual(expect.arrayContaining([expect.stringContaining('GET /health')]));
+  });
 });

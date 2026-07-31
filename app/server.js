@@ -32,6 +32,17 @@ app.get('/esteiras/:id', (req, res) => {
   res.status(200).json(esteira);
 });
 
+app.get('/tests', (req, res) => {
+  const testes = [
+    'GET /health',
+    'GET /esteiras',
+    'GET /esteiras/:id',
+    'GET /tests',
+  ];
+
+  res.status(200).json(testes);
+});
+
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
   app.listen(PORT, () => console.log(`LogiTrack API rodando na porta ${PORT}`));
