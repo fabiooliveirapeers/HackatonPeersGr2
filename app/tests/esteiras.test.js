@@ -8,6 +8,7 @@ describe('LogiTrack API', () => {
     expect(res.body.status).toBe('ok');
   });
 
+  
   test('GET /esteiras retorna lista de esteiras', async () => {
     const res = await request(app).get('/esteiras');
     expect(res.statusCode).toBe(200);
