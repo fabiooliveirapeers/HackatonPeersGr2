@@ -18,19 +18,20 @@ uma esteira de CI/CD confiável.
 
 ## O que seu time precisa entregar
 
-1. **Pipeline corrigida rodando no Actions** — build, testes reais
-   (bloqueantes) e deploy.
-2. **Gerenciamento seguro de secrets** — nada de token em texto puro no
-   YAML.
-3. **Estratégia de deploy segura** — alguma forma de blue/green ou canary,
-   e um caminho de rollback claro (não precisa ser 100% automatizado, mas
-   precisa existir e ser demonstrável).
-4. **Disciplina de trigger** — a pipeline não deve rodar descontroladamente
-   em qualquer branch.
-5. **Observabilidade mínima** — pelo menos um passo que gere log
-   estruturado ou um health-check pós-deploy.
+1. **Confiabilidade** — nenhuma mudança quebrada pode passar despercebida;
+   se algo falhar, o pipeline tem que travar antes de chegar em produção.
+2. **Segurança de credenciais** — nenhuma credencial pode aparecer exposta
+   em nenhum lugar (código, YAML, log de execução).
+3. **Recuperação rápida** — se o deploy quebrar o serviço, o time precisa
+   conseguir voltar ao estado anterior em minutos, não em horas, e
+   demonstrar isso ao vivo.
+4. **Disciplina de execução** — o pipeline não pode disparar
+   descontroladamente a qualquer mudança, em qualquer lugar do
+   repositório.
+5. **Visibilidade** — alguém precisa conseguir saber, sem adivinhar, se o
+   deploy realmente funcionou.
 6. **Um ADR curto (meia página)** documentando as decisões técnicas do seu
-   time.
+   time e o porquê.
 
 ## Regras
 
