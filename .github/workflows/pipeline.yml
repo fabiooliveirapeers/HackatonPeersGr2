@@ -18,6 +18,20 @@ on:
       - 'app/Dockerfile'
       - 'scripts/**'
   workflow_dispatch:
+    inputs:
+      run_rollback:
+        description: 'Executar rollback após o deploy'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+      rollback_image_tag:
+        description: 'Tag da imagem para o rollback (ex.: latest ou sha do commit)'
+        required: false
+        default: 'latest'
+        type: string
 
 concurrency:
   group: logitrack-${{ github.workflow }}-${{ github.ref }}
@@ -67,7 +81,7 @@ jobs:
 
   build-and-publish:
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -95,7 +109,7 @@ jobs:
 
   deploy:
     needs: build-and-publish
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -112,3 +126,26 @@ jobs:
         run: |
           chmod +x ./app/scripts/smoke-test.sh
           ./app/scripts/smoke-test.sh "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+  rollback:
+    needs: deploy
+    if: github.event_name == 'workflow_dispatch' && inputs.run_rollback == 'true' && needs.deploy.result == 'success'
+    environment:
+      name: production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login no GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Executar rollback com aprovação
+        env:
+          IMAGE_REF: ${{ format('{0}/{1}:{2}', env.REGISTRY, env.IMAGE_NAME, inputs.rollback_image_tag) }}
+        run: |
+          chmod +x ./scripts/rollback.sh
+          ./scripts/rollback.sh "$IMAGE_REF"
