@@ -30,7 +30,6 @@ app.get('/esteiras', (req, res) => {
     return matchStatus && matchSetor;
   });
 
-  console.log("teste")
   res.status(200).json(filtradas);
 });
 
