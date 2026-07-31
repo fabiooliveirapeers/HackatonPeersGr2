@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - .github/workflows/**
+      - ".github/workflows/**"
       - "app/**"
       - ".github/workflows/pipeline.yml"
       - "app/Dockerfile"
